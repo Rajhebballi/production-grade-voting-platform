@@ -1,0 +1,53 @@
+services:
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: voteuser
+      POSTGRES_PASSWORD: votepass
+      POSTGRES_DB: votedb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d
+
+  vote:
+    build: ../services/vote
+    ports:
+      - "5000:5000"
+    environment:
+      REDIS_HOST: redis
+    depends_on:
+      - redis
+
+  worker:
+    build: ../services/worker
+    environment:
+      REDIS_HOST: redis
+      DB_HOST: postgres
+      DB_NAME: votedb
+      DB_USER: voteuser
+      DB_PASSWORD: votepass
+    depends_on:
+      - redis
+      - postgres
+
+  result:
+    build: ../services/result
+    ports:
+      - "5001:5001"
+    environment:
+      DB_HOST: postgres
+      DB_NAME: votedb
+      DB_USER: voteuser
+      DB_PASSWORD: votepass
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:

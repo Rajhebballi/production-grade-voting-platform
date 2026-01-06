@@ -1,0 +1,15 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: "vote-service"
+    static_configs:
+      - targets: ["vote:5000"]  # Uses the service name 'vote'
+
+  - job_name: "result-service"
+    static_configs:
+      - targets: ["result:5001"] # Uses the service name 'result'
+
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]

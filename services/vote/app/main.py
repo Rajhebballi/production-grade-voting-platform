@@ -5,7 +5,12 @@ import os
 import redis
 from flask import Flask, request, jsonify
 
-from prometheus_client import Counter, generate_latest, CONTENT_TYPE_LATEST
+from prometheus_client import (
+    Counter,
+    Histogram,
+    generate_latest,
+    CONTENT_TYPE_LATEST
+)
 
 # -----------------------------
 # Basic app setup
@@ -52,6 +57,13 @@ VOTES_COUNT = Counter(
     ["option"]
 )
 
+# 🔹 NEW: Request latency histogram
+REQUEST_LATENCY = Histogram(
+    "vote_request_latency_seconds",
+    "Latency of vote requests",
+    ["endpoint"]
+)
+
 # -----------------------------
 # Routes
 # -----------------------------
@@ -63,6 +75,7 @@ def health():
 
 
 @app.route("/vote", methods=["POST"])
+@REQUEST_LATENCY.labels(endpoint="/vote").time()
 def vote():
     REQUEST_COUNT.labels(method="POST", endpoint="/vote").inc()
 
